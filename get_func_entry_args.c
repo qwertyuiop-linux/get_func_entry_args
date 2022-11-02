@@ -4,6 +4,9 @@
 #include <linux/module.h>
 #include <linux/kprobes.h>
 #include <linux/signal.h>
+#include <asm/stacktrace.h>
+#include <asm/traps.h>
+
 
 static char *symbol_name = NULL;
 module_param(symbol_name, charp, 0644);
@@ -17,7 +20,7 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
 {
     unsigned long clone_flags = 0;
     unsigned long stack_start = 0;
-
+    struct stackframe frame;
     struct filename *filename = NULL;
 
     int sig = 0;
@@ -70,6 +73,28 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
         t = (struct task_struct *)regs->ARM_r2;
 
         printk("[%s-%d] send signal %d to [%s-%d] \n", current->comm, current->pid, sig, t->comm, t->pid);
+    }
+    else if (strncmp(p->symbol_name, "put_super", 9) == 0)
+    {
+        frame.fp = regs->ARM_fp;
+        frame.sp = regs->ARM_sp;
+        frame.lr = regs->ARM_lr;
+        /* use lr as frame.pc, because use pc cant dumpstack, maybe in kprobes */
+        frame.pc = regs->ARM_lr;
+        
+        while(1)
+        {
+            int urc;
+            unsigned long where = frame.pc;
+            
+            urc = unwind_frame(&frame);
+            if (urc < 0)
+            {
+                break;
+            }
+
+            dump_backtrace_entry(where, frame.pc, frame.sp-4);
+        }
     }
     else
     {
