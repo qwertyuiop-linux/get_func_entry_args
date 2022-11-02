@@ -10,9 +10,15 @@
 insmod get_func_entry_args.ko symbol_name=__do_fork
 ```
 
-# 内核配置
+# 内核修改
+
+## 内核配置
 
 `CONFIG_KPROBES=y`需要配置
+
+## 内核修改
+
+unwind_frame和dump_backtrace_entry函数需要内核export.
 
 # 可能遇到问题
 
