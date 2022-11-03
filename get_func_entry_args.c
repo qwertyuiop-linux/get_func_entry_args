@@ -21,7 +21,7 @@ static void show_backtrace(struct pt_regs *regs)
 {
     struct stackframe frame;
     int urc;
-    unsigned long where
+    unsigned long where;
     
     frame.fp = regs->ARM_fp;
     frame.sp = regs->ARM_sp;
@@ -125,7 +125,7 @@ static int handler_fault(struct kprobe *p, struct pt_regs *regs, int trapnr)
 }
 
 
-static int __init get_func_entry_args_init(void)
+int __init get_func_entry_args_init(void)
 {
     int ret = 0;
     if (!symbol_name)
@@ -151,7 +151,7 @@ static int __init get_func_entry_args_init(void)
 }
 
 
-static void __exit get_func_entry_args_exit(void)
+void __exit get_func_entry_args_exit(void)
 {
     unregister_kprobe(&kp);
 }
