@@ -1,3 +1,8 @@
+/*
+ * qian can <qiancan31863@gmail.com>
+ */
+
+
 #include <linux/sched.h>
 #include <asm/uaccess.h>
 #include <linux/kernel.h>
@@ -100,13 +105,10 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
 
         printk("[%s-%d] send signal %d to [%s-%d] \n", current->comm, current->pid, sig, t->comm, t->pid);
     }
-    else if (strncmp(p->symbol_name, "put_super", 9) == 0)
-    {
-        show_backtrace(regs);
-    }
     else
     {
         printk("symbol_name: %s\n", p->symbol_name);
+        show_backtrace(regs);
     }
 #endif
     return 0;
