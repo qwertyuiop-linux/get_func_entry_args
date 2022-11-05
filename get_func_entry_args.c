@@ -108,8 +108,9 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
     else
     {
         printk("symbol_name: %s\n", p->symbol_name);
-        show_backtrace(regs);
     }
+    
+    show_backtrace(regs);
 #endif
     return 0;
 }
