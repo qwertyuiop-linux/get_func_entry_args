@@ -59,7 +59,7 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
     struct task_struct *t = NULL;
 
     printk("----------------hander_pre-------------------\n");
-    printk("comm=%s pid=%d", current->comm, current->pid);
+    printk("comm=%s pid=%d\n", current->comm, current->pid);
 #ifdef CONFIG_ARM
     printk("pc is at %pS\n", (void*)instruction_pointer(regs));
     printk("lr is at %pS\n", (void*)regs->ARM_lr);
