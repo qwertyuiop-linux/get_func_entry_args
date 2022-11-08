@@ -13,6 +13,6 @@ clean:
 
 else
 
-obj-m:=get_func_entry_args.o
+obj-m:=qtool.o
 
 endif

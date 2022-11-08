@@ -128,7 +128,7 @@ static int handler_fault(struct kprobe *p, struct pt_regs *regs, int trapnr)
 }
 
 
-int __init get_func_entry_args_init(void)
+int __init qtool_init(void)
 {
     int ret = 0;
     if (!symbol_name)
@@ -154,12 +154,12 @@ int __init get_func_entry_args_init(void)
 }
 
 
-void __exit get_func_entry_args_exit(void)
+void __exit qtool_exit(void)
 {
     unregister_kprobe(&kp);
 }
 
 
-module_init(get_func_entry_args_init);
-module_exit(get_func_entry_args_exit);
+module_init(qtool_init);
+module_exit(qtool_exit);
 MODULE_LICENSE("GPL");
