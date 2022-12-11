@@ -129,26 +129,42 @@ static int handler_fault(struct kprobe *p, struct pt_regs *regs, int trapnr)
 }
 
 
-static void *qtool_seq_start(struct seq_file *f, loff_t *pos)
+static void *qtool_seq_start(struct seq_file *s, loff_t *pos)
 {
+    static unsigned long counter = 0;
+
+    if (*pos == 0)
+    {
+        return &counter;
+    }
+    else
+    {
+        *pos = 0;
+        return NULL;
+    }
+}
+
+
+static void *qtool_seq_next(struct seq_file *s, void *v, loff_t *pos)
+{
+    unsigned long *tmp_v = (unsigned long *)v;
+    (*tmp_v)++;
+    (*pos)++;
     return NULL;
 }
 
 
-static void *qtool_seq_next(struct seq_file *f, void *v, loff_t *pos)
-{
-    return NULL;
-}
-
-
-static void qtool_seq_stop(struct seq_file *f, void *v)
+static void qtool_seq_stop(struct seq_file *s, void *v)
 {
 
 }
 
 
-static int qtool_seq_show(struct seq_file *pi, void *v)
+static int qtool_seq_show(struct seq_file *s, void *v)
 {
+    unsigned long *a = (unsigned long *)v;
+
+    seq_printf(s, "%d\n", *a);
     return 0;
 }
 
