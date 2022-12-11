@@ -11,7 +11,8 @@
 #include <linux/signal.h>
 #include <asm/stacktrace.h>
 #include <asm/traps.h>
-
+#include <linux/seq_file.h>
+#include <linux/proc_fs.h>
 
 static char *symbol_name = NULL;
 module_param(symbol_name, charp, 0644);
@@ -128,6 +129,71 @@ static int handler_fault(struct kprobe *p, struct pt_regs *regs, int trapnr)
 }
 
 
+static void *qtool_seq_start(struct seq_file *f, loff_t *pos)
+{
+    return NULL;
+}
+
+
+static void *qtool_seq_next(struct seq_file *f, void *v, loff_t *pos)
+{
+    return NULL;
+}
+
+
+static void qtool_seq_stop(struct seq_file *f, void *v)
+{
+
+}
+
+
+static int qtool_seq_show(struct seq_file *pi, void *v)
+{
+    return 0;
+}
+
+
+static struct seq_operations qtool_seq_ops = {
+    .start = qtool_seq_start,
+    .next = qtool_seq_next,
+    .stop = qtool_seq_stop,
+    .show = qtool_seq_show
+};
+
+
+static int qtool_seq_open(struct inode *inode, struct file *file)
+{
+    return seq_open(file, &qtool_seq_ops);
+}
+
+static const struct file_operations qtool_proc_ops = {
+    .owner = THIS_MODULE,
+    .open = qtool_seq_open,
+    .read = seq_read,
+    .llseek = seq_lseek,
+    .release = seq_release,
+};
+
+
+static void qtool_proc_create(void)
+{
+    struct proc_dir_entry *qtool_entry = NULL;
+
+    qtool_entry = proc_create("qtool", 0x644, NULL, &qtool_proc_ops);
+
+    if (!qtool_entry)
+    {
+        printk("create qtool proc fail. \n");
+    }
+}
+
+
+static void qtool_proc_remove(void)
+{
+    remove_proc_entry("qtool", NULL);
+}
+
+
 int __init qtool_init(void)
 {
     int ret = 0;
@@ -150,6 +216,7 @@ int __init qtool_init(void)
         return ret;
     }
 
+    qtool_proc_create();
     return 0;
 }
 
@@ -157,6 +224,7 @@ int __init qtool_init(void)
 void __exit qtool_exit(void)
 {
     unregister_kprobe(&kp);
+    qtool_proc_remove();
 }
 
 
