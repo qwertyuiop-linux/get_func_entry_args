@@ -13,6 +13,14 @@
 #include <asm/traps.h>
 #include <linux/seq_file.h>
 #include <linux/proc_fs.h>
+#include <linux/list.h>
+#include <linux/slab.h>
+
+struct do_execveat_common_list
+{
+    struct list_head list;
+    char   filename[32];
+};
 
 static char *symbol_name = NULL;
 module_param(symbol_name, charp, 0644);
@@ -21,6 +29,9 @@ static unsigned int offset = 0x00;
 module_param(offset, uint, 0644);
 
 static struct kprobe kp = {.symbol_name = "?"};
+
+struct do_execveat_common_list g_do_execveat_common_list;
+
 
 #ifdef CONFIG_ARM
 static void show_backtrace(struct pt_regs *regs)
@@ -54,11 +65,15 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
     unsigned long clone_flags = 0;
     unsigned long stack_start = 0;
     struct filename *filename = NULL;
-
+    struct do_execveat_common_list *p_do_execveat_common;
+    struct list_head *pos;
+   
     int sig = 0;
     struct siginfo *info = NULL;
     struct task_struct *t = NULL;
 
+    p_do_execveat_common = kmalloc(sizeof(struct do_execveat_common_list), GFP_KERNEL);
+    memset(p_do_execveat_common, 0x00, sizeof(struct do_execveat_common_list));
     printk("----------------hander_pre-------------------\n");
     printk("comm=%s pid=%d\n", current->comm, current->pid);
 #ifdef CONFIG_ARM
@@ -96,6 +111,10 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
         if (filename)
         {
             printk("[do_execveat_common] filename : %s \n", filename->name);
+            strncpy(p_do_execveat_common->filename, filename->name, strlen(filename->name));
+            p_do_execveat_common->filename[strlen(filename->name)] = '\0';
+
+            list_add_tail(&p_do_execveat_common->list,&g_do_execveat_common_list.list);
         }
     }
     else if (strncmp(p->symbol_name, "__send_signal", 13) == 0)
@@ -111,6 +130,10 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
         printk("symbol_name: %s\n", p->symbol_name);
     }
     
+    //list_for_each(pos, &g_do_execveat_common_list.list)
+    //{
+    //    printk("filename %s \n", ((struct do_execveat_common_list*)pos)->filename);
+    //}
     show_backtrace(regs);
 #endif
     return 0;
@@ -162,9 +185,16 @@ static void qtool_seq_stop(struct seq_file *s, void *v)
 
 static int qtool_seq_show(struct seq_file *s, void *v)
 {
-    unsigned long *a = (unsigned long *)v;
+    unsigned long len = 0;
+    struct list_head *tmp;
 
-    seq_printf(s, "%d\n", *a);
+    list_for_each(tmp, &g_do_execveat_common_list.list)
+    {
+        //len += snprintf(s+len, 32, "filename %s \n", ((struct do_execveat_common_list*)tmp)->filename);
+        seq_printf(s, "filename %s\n", ((struct do_execveat_common_list*)tmp)->filename);
+    }
+    
+    //seq_printf(s, "%d\n", *a);
     return 0;
 }
 
@@ -230,6 +260,11 @@ int __init qtool_init(void)
     {
         printk("register_kprobe failed, return %d\n" ,ret);
         return ret;
+    }
+
+    if (strncmp(symbol_name, "do_execveat_common", 18) == 0)
+    {
+        INIT_LIST_HEAD(&g_do_execveat_common_list.list);
     }
 
     qtool_proc_create();
